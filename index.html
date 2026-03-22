@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free AI Video Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #c471f5 75%, #667eea 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            opacity: 0.95;
+            margin-bottom: 40px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2), 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            color: #333;
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .prompt-input::placeholder {
+            color: #999;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3), 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .presets {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .preset-btn {
+            padding: 10px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .generate-btn {
+            padding: 18px 50px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .generate-btn:hover::before {
+            left: 100%;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+
+        .generate-btn:active {
+            transform: translateY(-1px);
+        }
+
+        footer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            opacity: 0.8;
+            z-index: 2;
+        }
+
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            from {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                max-width: 100%;
+            }
+            
+            .presets {
+                gap: 8px;
+            }
+            
+            .preset-btn {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+            
+            .generate-btn {
+                padding: 16px 40px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <h1>Free AI Video Generator</h1>
+        <p class="subtitle">Create amazing videos using AI for free</p>
+        
+        <div class="input-wrapper">
+            <textarea 
+                class="prompt-input" 
+                id="promptInput" 
+                placeholder="Write your video prompt here... Describe the scene, style, and mood you want in your AI-generated video."
+                rows="4"
+            ></textarea>
+        </div>
+        
+        <div class="presets">
+            <button class="preset-btn" onclick="setPreset('A peaceful scene in Studio Ghibli style with floating clouds, green meadows, and a character walking through a magical forest with glowing spirits')">
+                🎨 Ghibli Style
+            </button>
+            <button class="preset-btn" onclick="setPreset('Bustling Indian city street with colorful rickshaws, street vendors, vibrant saris, and modern skyscrapers in the background during golden hour')">
+                🏙️ Indian City
+            </button>
+            <button class="preset-btn" onclick="setPreset('A romantic love story scene with two silhouettes holding hands at sunset on a beach, waves gently crashing, soft golden light')">
+                💕 Love Story
+            </button>
+        </div>
+        
+        <button class="generate-btn" onclick="generateVideo()">Generate Video</button>
+    </div>
+    
+    <footer>Powered by AI tools</footer>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Set preset text
+        function setPreset(text) {
+            const input = document.getElementById('promptInput');
+            input.value = text;
+            input.focus();
+            
+            // Add a subtle animation
+            input.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                input.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        // Generate video function
+        function generateVideo() {
+            const input = document.getElementById('promptInput');
+            const prompt = input.value.trim();
+            
+            if (!prompt) {
+                alert('Please enter a video prompt before generating!');
+                input.focus();
+                return;
+            }
+            
+            // Encode the prompt for URL
+            const encodedPrompt = encodeURIComponent(prompt);
+            
+            // Example URL - replace with actual AI video generator URL
+            // Some popular options: RunwayML, Pika Labs, Stable Video Diffusion
+            // Using a generic example that would work with most AI platforms
+            const videoGeneratorURL = `https://app.runwayml.com/video/text-to-video?prompt=${encodedPrompt}`;
+            
+            // Alternative: If the service doesn't support URL parameters, just open the site
+            // window.open('https://app.runwayml.com/', '_blank');
+            
+            // Open in new tab
+            window.open(videoGeneratorURL, '_blank');
+            
+            // Optional: Show a message
+            setTimeout(() => {
+                input.value = '';
+                input.placeholder = 'Video generation started! Enter another prompt...';
+                setTimeout(() => {
+                    input.placeholder = 'Write your video prompt here... Describe the scene, style, and mood you want in your AI-generated video.';
+                }, 3000);
+            }, 500);
+        }
+
+        // Enter key support
+        document.getElementById('promptInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                generateVideo();
+            }
+        });
+
+        // Initialize particles on load
+        window.addEventListener('load', createParticles);
+    </script>
+</body>
+</html>
